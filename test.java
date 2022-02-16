@@ -4,7 +4,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.IOException;
 
 public class test extends JPanel {
     JFileChooser chooser;
@@ -16,7 +15,7 @@ public class test extends JPanel {
         frame = new JFrame();
         panel = new JPanel();
         JButton sef = new JButton("Select a File");
-        sef.addActionListener(new action1());
+        sef.addActionListener(new actionSelectFile());
         add(sef);
 
         panel.setBorder(BorderFactory.createEmptyBorder(200, 200, 200 ,200));
@@ -37,10 +36,20 @@ public class test extends JPanel {
         frame = new JFrame();
         panel2 = new JPanel();
         JButton accept = new JButton("Accept changes");
-        accept.addActionListener(new action2());
+        accept.addActionListener(new actionAcceptRename());
         add(accept);
 
-        String inside[] = file.list();
+        JPanel panel3 = new JPanel();
+
+        JButton selectAll = new JButton("Select All");
+        selectAll.addActionListener(new actionSelectAll());
+        add(selectAll);
+
+        JButton deselectAll = new JButton("Deselect All");
+        deselectAll.addActionListener(new actionDeselectAll());
+        add(deselectAll);
+
+        String[] inside = file.list();
 
         for (String s : inside) {
             JCheckBox temp = new JCheckBox(s);
@@ -52,6 +61,10 @@ public class test extends JPanel {
         panel2.setLayout(new GridLayout(0, 1));
         panel2.add(accept);
 
+        panel3.add(selectAll);
+        panel3.add(deselectAll);
+        frame.getContentPane().add(panel3, BorderLayout.SOUTH);
+
         frame.add(panel2, BorderLayout.CENTER);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setTitle("Folders to Rename");
@@ -59,7 +72,7 @@ public class test extends JPanel {
         frame.setVisible(true);
     }
 
-    private class action1 implements ActionListener {
+    private class actionSelectFile implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             chooser = new JFileChooser();
             chooser.setCurrentDirectory(new java.io.File("."));
@@ -73,7 +86,7 @@ public class test extends JPanel {
         }
     }
 
-    private class action2 implements ActionListener {
+    private class actionAcceptRename implements ActionListener {
         public void actionPerformed (ActionEvent e) {
             for (Component c : panel2.getComponents()) {
                 if (c instanceof JCheckBox) {
@@ -89,6 +102,28 @@ public class test extends JPanel {
                 }
             }
             frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+        }
+    }
+
+    private class actionDeselectAll implements ActionListener {
+        public void actionPerformed (ActionEvent e) {
+            for (Component c : panel2.getComponents()) {
+                if (c instanceof JCheckBox) {
+                    JCheckBox check = (JCheckBox) c;
+                    check.setSelected(false);
+                }
+            }
+        }
+    }
+
+    private class actionSelectAll implements ActionListener {
+        public void actionPerformed (ActionEvent e) {
+            for (Component c : panel2.getComponents()) {
+                if (c instanceof JCheckBox) {
+                    JCheckBox check = (JCheckBox) c;
+                    check.setSelected(true);
+                }
+            }
         }
     }
 
