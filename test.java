@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.util.regex.Pattern;
 
 public class test extends JPanel {
     JFileChooser chooser;
@@ -11,6 +12,7 @@ public class test extends JPanel {
     JPanel panel;
     JPanel panel2;
     String selectedFileName;
+    JTextField regexTextField;
     public test() {
         frame = new JFrame();
         panel = new JPanel();
@@ -21,7 +23,6 @@ public class test extends JPanel {
         panel.setBorder(BorderFactory.createEmptyBorder(200, 200, 200 ,200));
         panel.setLayout(new GridLayout(0, 1));
         panel.add(sef);
-
 
         frame.add(panel, BorderLayout.CENTER);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -49,27 +50,62 @@ public class test extends JPanel {
         deselectAll.addActionListener(new actionDeselectAll());
         add(deselectAll);
 
+        JPanel regexPanel = new JPanel();
+        regexTextField = new JTextField("\\[Keep\\]");
+        regexTextField.setPreferredSize(new Dimension(200, 30));
+        JButton updateRegex = new JButton("Update Regex");
+        updateRegex.addActionListener(new actionUpdateRegex());
+        regexPanel.add(new JLabel("Regex:"));
+        regexPanel.add(regexTextField);
+        regexPanel.add(updateRegex);
+
+
+
         String[] inside = file.list();
 
         for (String s : inside) {
             JCheckBox temp = new JCheckBox(s);
+            updateCheckboxText(temp, s, regexTextField.getText());
             temp.setSelected(true);
             panel2.add(temp);
         }
 
-        panel2.setBorder(BorderFactory.createEmptyBorder(200, 200, 200 ,200));
+        panel2.setBorder(BorderFactory.createEmptyBorder(10, 20, 10,20));
         panel2.setLayout(new GridLayout(0, 1));
         panel2.add(accept);
 
+        panel3.add(regexPanel);
         panel3.add(selectAll);
         panel3.add(deselectAll);
-        frame.getContentPane().add(panel3, BorderLayout.SOUTH);
+        panel3.setLayout(new GridLayout(1, 0));
 
-        frame.add(panel2, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(panel2);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new Dimension(600, 1080)); // Adjust the dimensions as needed
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        frame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+        frame.getContentPane().add(panel3, BorderLayout.SOUTH);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setTitle("Folders to Rename");
         frame.pack();
         frame.setVisible(true);
+    }
+
+    private void updateCheckboxText(JCheckBox checkBox, String folderName, String regex) {
+        String oldName = folderName;
+        String newName = applyRegexToFolderName(oldName, regex);
+        checkBox.setText("<html><body>Old: " + oldName + "<br>New: " + newName + "</body></html>");
+    }
+
+    private String applyRegexToFolderName(String folderName, String regex) {
+        try {
+            Pattern pattern = Pattern.compile(regex);
+            return pattern.matcher(folderName).replaceAll("");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return folderName; // Return original name if regex is invalid
+        }
     }
 
     private class actionSelectFile implements ActionListener {
@@ -88,16 +124,16 @@ public class test extends JPanel {
 
     private class actionAcceptRename implements ActionListener {
         public void actionPerformed (ActionEvent e) {
+            String regex = regexTextField.getText();
             for (Component c : panel2.getComponents()) {
                 if (c instanceof JCheckBox) {
                     JCheckBox check = (JCheckBox) c;
                     if (check.isSelected()) {
-                        File old = new File(selectedFileName + "\\" + check.getText());
-                        String[] newName = old.getName().split("] ", 2);
-                        if (newName.length > 1) {
-                            File rename = new File(selectedFileName + "\\" + newName[1]);
-                            old.renameTo(rename);
-                        }
+                        String oldName = check.getText().split("<br>")[0].substring(17); // Extract Old: line
+                        File old = new File(selectedFileName + "\\" + oldName);
+                        String newName = applyRegexToFolderName(oldName, regex);
+                        File rename = new File(selectedFileName + "\\" + newName);
+                        old.renameTo(rename);
                     }
                 }
             }
@@ -127,16 +163,25 @@ public class test extends JPanel {
         }
     }
 
+    private class actionUpdateRegex implements ActionListener {
+        public void actionPerformed (ActionEvent e) {
+            String newRegex = regexTextField.getText();
+            for (Component c : panel2.getComponents()) {
+                if (c instanceof JCheckBox) {
+                    JCheckBox check = (JCheckBox) c;
+                    if (check.isSelected()) {
+                        String oldName = check.getText().split("<br>")[0].substring(17);
+                        updateCheckboxText(check, oldName, newRegex);
+                    }
+                }
+            }
+        }
+    }
+
     public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (UnsupportedLookAndFeelException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
+        } catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
         test t = new test();
