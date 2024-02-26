@@ -51,7 +51,7 @@ public class test extends JPanel {
         add(deselectAll);
 
         JPanel regexPanel = new JPanel();
-        regexTextField = new JTextField("\\[Keep\\]");
+        regexTextField = new JTextField("\\[.*?\\]");
         regexTextField.setPreferredSize(new Dimension(200, 30));
         JButton updateRegex = new JButton("Update Regex");
         updateRegex.addActionListener(new actionUpdateRegex());
